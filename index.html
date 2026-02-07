@@ -1,0 +1,2618 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <base target="_self">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>iTalks - Pesan Instan</title>
+    <meta name="description" content="iTalks - Aplikasi pesan instan modern dengan fitur chat real-time dan story">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#007AFF",
+                        "primary-dark": "#0056CC",
+                        secondary: "#34C759",
+                        "secondary-dark": "#2CAE4E",
+                        accent: "#5856D6",
+                        "accent-dark": "#4645B4",
+                        background: "#F2F2F7",
+                        "background-dark": "#1C1C1E",
+                        surface: "#FFFFFF",
+                        "surface-dark": "#2C2C2E",
+                        text: "#000000",
+                        "text-light": "#8E8E93",
+                        "text-dark": "#F2F2F7"
+                    },
+                    fontFamily: {
+                        sans: ['-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'Helvetica Neue', 'Arial', 'sans-serif'],
+                        mono: ['SF Mono', 'Monaco', 'Inconsolata', 'monospace']
+                    },
+                    animation: {
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'slide-in': 'slideIn 0.3s ease-out',
+                        'fade-in': 'fadeIn 0.5s ease-out',
+                        'text-glow': 'textGlow 2s ease-in-out infinite',
+                        'float': 'float 3s ease-in-out infinite'
+                    },
+                    keyframes: {
+                        slideIn: {
+                            '0%': { transform: 'translateX(-100%)', opacity: '0' },
+                            '100%': { transform: 'translateX(0)', opacity: '1' }
+                        },
+                        fadeIn: {
+                            '0%': { opacity: '0' },
+                            '100%': { opacity: '1' }
+                        },
+                        textGlow: {
+                            '0%, 100%': { textShadow: '0 0 20px rgba(255, 255, 255, 0.5)' },
+                            '50%': { textShadow: '0 0 30px rgba(255, 255, 255, 0.8)' }
+                        },
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0px)' },
+                            '50%': { transform: 'translateY(-10px)' }
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        }
+        
+        .scrollbar-thin {
+            scrollbar-width: thin;
+            scrollbar-color: #C7C7CC #F2F2F7;
+        }
+        
+        .scrollbar-thin::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .scrollbar-thin::-webkit-scrollbar-track {
+            background: #F2F2F7;
+            border-radius: 3px;
+        }
+        
+        .scrollbar-thin::-webkit-scrollbar-thumb {
+            background: #C7C7CC;
+            border-radius: 3px;
+        }
+        
+        .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+            background: #AEAEB2;
+        }
+        
+        .message-bubble {
+            max-width: 70%;
+            word-wrap: break-word;
+        }
+        
+        .typing-indicator {
+            display: inline-flex;
+            align-items: center;
+        }
+        
+        .typing-indicator span {
+            height: 8px;
+            width: 8px;
+            margin: 0 2px;
+            background-color: #AEAEB2;
+            border-radius: 50%;
+            display: inline-block;
+            animation: typing 1.4s infinite ease-in-out both;
+        }
+        
+        .typing-indicator span:nth-child(1) {
+            animation-delay: -0.32s;
+        }
+        
+        .typing-indicator span:nth-child(2) {
+            animation-delay: -0.16s;
+        }
+        
+        @keyframes typing {
+            0%, 80%, 100% { 
+                transform: scale(0);
+                opacity: 0.5;
+            }
+            40% { 
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+        
+        .online-status {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            border: 2px solid white;
+        }
+        
+        .online-status.online {
+            background-color: #34C759;
+        }
+        
+        .online-status.away {
+            background-color: #FF9500;
+        }
+        
+        .online-status.offline {
+            background-color: #8E8E93;
+        }
+        
+        .story-ring {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            padding: 2px;
+            background: linear-gradient(45deg, #FF2D55, #5856D6, #007AFF);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        
+        .story-ring:hover {
+            transform: scale(1.05);
+        }
+        
+        .story-ring.viewed {
+            background: #C7C7CC;
+        }
+        
+        .story-ring-my {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            padding: 2px;
+            background: #E5E5EA;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        
+        .story-ring-my:hover {
+            transform: scale(1.05);
+        }
+        
+        .story-fullscreen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 100;
+            background: black;
+        }
+        
+        .story-progress {
+            height: 3px;
+            background-color: rgba(255, 255, 255, 0.3);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+        
+        .story-progress-bar {
+            height: 100%;
+            background-color: white;
+            animation: progress 10s linear forwards;
+        }
+        
+        @keyframes progress {
+            from { width: 0%; }
+            to { width: 100%; }
+        }
+        
+        .message-status {
+            font-size: 12px;
+            margin-left: 4px;
+        }
+        
+        .message-status.sent {
+            color: #8E8E93;
+        }
+        
+        .message-status.delivered {
+            color: #007AFF;
+        }
+        
+        .message-status.read {
+            color: #34C759;
+        }
+        
+        @media (max-width: 768px) {
+            .chat-container {
+                height: calc(100vh - 140px);
+            }
+            
+            .contacts-sidebar {
+                position: fixed;
+                left: -100%;
+                top: 0;
+                width: 100%;
+                height: 100%;
+                z-index: 50;
+                transition: left 0.3s ease;
+            }
+            
+            .contacts-sidebar.active {
+                left: 0;
+            }
+            
+            .overlay {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background-color: rgba(0, 0, 0, 0.5);
+                z-index: 40;
+                display: none;
+            }
+            
+            .overlay.active {
+                display: block;
+            }
+        }
+        
+        .group-avatar {
+            position: relative;
+            width: 48px;
+            height: 48px;
+        }
+        
+        .group-avatar img {
+            position: absolute;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            border: 2px solid white;
+        }
+        
+        .group-avatar img:nth-child(1) {
+            top: 0;
+            left: 0;
+            z-index: 3;
+        }
+        
+        .group-avatar img:nth-child(2) {
+            bottom: 0;
+            right: 0;
+            z-index: 2;
+        }
+        
+        .group-avatar img:nth-child(3) {
+            top: 8px;
+            left: 16px;
+            z-index: 1;
+        }
+        
+        .story-modal {
+            z-index: 100;
+        }
+        
+        /* Background gradients untuk story teks dengan tema iTalks */
+        .story-bg-motivasi {
+            background: linear-gradient(135deg, #007AFF 0%, #5856D6 100%);
+        }
+        
+        .story-bg-bahagia {
+            background: linear-gradient(135deg, #FF2D55 0%, #FF9500 100%);
+        }
+        
+        .story-bg-santai {
+            background: linear-gradient(135deg, #5AC8FA 0%, #34C759 100%);
+        }
+        
+        .story-bg-segar {
+            background: linear-gradient(135deg, #4CD964 0%, #5AC8FA 100%);
+        }
+        
+        .story-bg-energik {
+            background: linear-gradient(135deg, #FF9500 0%, #FFCC00 100%);
+        }
+        
+        .story-bg-misterius {
+            background: linear-gradient(135deg, #5856D6 0%, #AF52DE 100%);
+        }
+        
+        .story-bg-romantis {
+            background: linear-gradient(135deg, #FF2D55 0%, #FF3B30 100%);
+        }
+        
+        .story-bg-profesional {
+            background: linear-gradient(135deg, #8E8E93 0%, #C7C7CC 100%);
+        }
+        
+        .story-bg-alam {
+            background: linear-gradient(135deg, #34C759 0%, #28CD41 100%);
+        }
+        
+        .story-bg-sunset {
+            background: linear-gradient(135deg, #FF9500 0%, #FF2D55 100%);
+        }
+        
+        .story-bg-ocean {
+            background: linear-gradient(135deg, #5AC8FA 0%, #007AFF 100%);
+        }
+        
+        .story-bg-night {
+            background: linear-gradient(135deg, #1C1C1E 0%, #2C2C2E 100%);
+        }
+        
+        .story-text-container {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+        
+        .story-text-content {
+            font-size: 2.5rem;
+            font-weight: bold;
+            text-align: center;
+            color: white;
+            text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.5);
+            padding: 2rem;
+            word-wrap: break-word;
+            max-width: 90%;
+            line-height: 1.4;
+        }
+        
+        @media (max-width: 640px) {
+            .story-text-content {
+                font-size: 2rem;
+                padding: 1.5rem;
+            }
+        }
+        
+        .emoji-picker {
+            position: absolute;
+            bottom: 100px;
+            right: 20px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            padding: 10px;
+            z-index: 20;
+            display: none;
+        }
+        
+        .emoji-picker.active {
+            display: block;
+        }
+        
+        .story-image-full {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .story-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(to bottom, rgba(0,0,0,0.3), rgba(0,0,0,0.1));
+        }
+        
+        /* Logo iTalks */
+        .italks-logo {
+            background: linear-gradient(135deg, #007AFF, #5856D6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-background font-sans text-text">
+    <!-- Overlay untuk sidebar mobile -->
+    <div class="overlay" id="overlay"></div>
+    
+    <!-- Modal Story Full Layar -->
+    <div class="story-fullscreen hidden" id="storyModal">
+        <div class="relative w-full h-full">
+            <!-- Header Story -->
+            <div class="absolute top-0 left-0 right-0 z-20 p-4 text-white">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 rounded-full border-2 border-white overflow-hidden">
+                            <img src="" alt="Profil" id="storyUserAvatar" class="w-full h-full object-cover">
+                        </div>
+                        <div>
+                            <h3 class="font-semibold" id="storyUserName"></h3>
+                            <p class="text-sm opacity-80" id="storyTime"></p>
+                        </div>
+                    </div>
+                    <button class="text-white text-2xl" id="closeStory">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <!-- Progress bars -->
+                <div class="flex space-x-1 mt-4" id="storyProgressBars"></div>
+            </div>
+            
+            <!-- Story Content Full Layar -->
+            <div class="w-full h-full" id="storyContentArea">
+                <!-- Content akan diisi oleh JavaScript -->
+            </div>
+            
+            <!-- Navigasi Story -->
+            <button class="absolute left-4 top-1/2 transform -translate-y-1/2 text-white text-2xl z-20 bg-black bg-opacity-50 rounded-full w-12 h-12 flex items-center justify-center hover:bg-opacity-70 transition-all" id="prevStory">
+                <i class="fas fa-chevron-left"></i>
+            </button>
+            <button class="absolute right-4 top-1/2 transform -translate-y-1/2 text-white text-2xl z-20 bg-black bg-opacity-50 rounded-full w-12 h-12 flex items-center justify-center hover:bg-opacity-70 transition-all" id="nextStory">
+                <i class="fas fa-chevron-right"></i>
+            </button>
+            
+            <!-- Input Komentar -->
+            <div class="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black to-transparent z-20">
+                <div class="flex items-center space-x-3">
+                    <input 
+                        type="text" 
+                        placeholder="Kirim pesan..." 
+                        class="flex-1 bg-white bg-opacity-20 backdrop-blur-sm text-white placeholder-white placeholder-opacity-70 rounded-full px-4 py-3 focus:outline-none focus:ring-2 focus:ring-white"
+                        id="storyCommentInput"
+                    >
+                    <button class="text-white" id="storyLikeBtn">
+                        <i class="far fa-heart text-2xl"></i>
+                    </button>
+                    <button class="text-white" id="storySendBtn">
+                        <i class="far fa-paper-plane text-2xl"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal Buat Story -->
+    <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50" id="createStoryModal">
+        <div class="bg-surface rounded-xl shadow-xl w-full max-w-md mx-4">
+            <div class="p-6">
+                <h3 class="text-lg font-semibold text-text mb-4">Buat Story Baru</h3>
+                
+                <!-- Pilihan Tipe Story -->
+                <div class="grid grid-cols-2 gap-4 mb-6">
+                    <button class="p-4 border-2 border-gray-200 rounded-lg hover:border-primary hover:bg-blue-50 transition-colors" id="textStoryBtn">
+                        <div class="flex flex-col items-center">
+                            <div class="w-12 h-12 rounded-full bg-gradient-to-r from-[#007AFF] to-[#5856D6] flex items-center justify-center mb-2">
+                                <i class="fas fa-font text-white text-xl"></i>
+                            </div>
+                            <span class="text-sm font-medium">Story Teks</span>
+                        </div>
+                    </button>
+                    
+                    <button class="p-4 border-2 border-gray-200 rounded-lg hover:border-primary hover:bg-blue-50 transition-colors" id="photoStoryBtn">
+                        <div class="flex flex-col items-center">
+                            <div class="w-12 h-12 rounded-full bg-gradient-to-r from-[#34C759] to-[#007AFF] flex items-center justify-center mb-2">
+                                <i class="fas fa-camera text-white text-xl"></i>
+                            </div>
+                            <span class="text-sm font-medium">Story Foto</span>
+                        </div>
+                    </button>
+                </div>
+                
+                <!-- Tombol Batal -->
+                <div class="flex justify-end">
+                    <button class="px-4 py-2 text-text-light hover:text-text" id="closeCreateStoryModal">
+                        Batal
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal Story Teks -->
+    <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50" id="textStoryModal">
+        <div class="bg-surface rounded-xl shadow-xl w-full max-w-lg mx-4">
+            <div class="p-6">
+                <h3 class="text-lg font-semibold text-text mb-4">Buat Story Teks</h3>
+                
+                <!-- Pilih Background berdasarkan mood -->
+                <div class="mb-6">
+                    <h4 class="text-sm font-medium text-text mb-3">Pilih Background</h4>
+                    <div class="grid grid-cols-3 gap-3">
+                        <div class="h-16 rounded-lg story-bg-motivasi cursor-pointer border-2 border-transparent hover:border-primary" data-bg="story-bg-motivasi" data-mood="motivasi"></div>
+                        <div class="h-16 rounded-lg story-bg-bahagia cursor-pointer border-2 border-transparent hover:border-primary" data-bg="story-bg-bahagia" data-mood="bahagia"></div>
+                        <div class="h-16 rounded-lg story-bg-santai cursor-pointer border-2 border-transparent hover:border-primary" data-bg="story-bg-santai" data-mood="santai"></div>
+                        <div class="h-16 rounded-lg story-bg-segar cursor-pointer border-2 border-transparent hover:border-primary" data-bg="story-bg-segar" data-mood="segar"></div>
+                        <div class="h-16 rounded-lg story-bg-energik cursor-pointer border-2 border-transparent hover:border-primary" data-bg="story-bg-energik" data-mood="energik"></div>
+                        <div class="h-16 rounded-lg story-bg-misterius cursor-pointer border-2 border-transparent hover:border-primary" data-bg="story-bg-misterius" data-mood="misterius"></div>
+                    </div>
+                </div>
+                
+                <!-- Input Teks -->
+                <div class="mb-6">
+                    <h4 class="text-sm font-medium text-text mb-3">Tulis Pesan</h4>
+                    <div class="relative">
+                        <textarea 
+                            class="w-full h-32 p-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary resize-none"
+                            placeholder="Ketik pesan untuk story..."
+                            id="storyTextInput"
+                        ></textarea>
+                        <button class="absolute bottom-3 right-3 text-text-light hover:text-primary" id="emojiBtn">
+                            <i class="far fa-smile text-xl"></i>
+                        </button>
+                    </div>
+                    <!-- Emoji Picker -->
+                    <div class="emoji-picker" id="emojiPicker">
+                        <div class="grid grid-cols-6 gap-2">
+                            <span class="text-xl cursor-pointer hover:bg-gray-100 rounded p-1">😀</span>
+                            <span class="text-xl cursor-pointer hover:bg-gray-100 rounded p-1">😂</span>
+                            <span class="text-xl cursor-pointer hover:bg-gray-100 rounded p-1">🥰</span>
+                            <span class="text-xl cursor-pointer hover:bg-gray-100 rounded p-1">😎</span>
+                            <span class="text-xl cursor-pointer hover:bg-gray-100 rounded p-1">🤩</span>
+                            <span class="text-xl cursor-pointer hover:bg-gray-100 rounded p-1">😜</span>
+                            <span class="text-xl cursor-pointer hover:bg-gray-100 rounded p-1">🙌</span>
+                            <span class="text-xl cursor-pointer hover:bg-gray-100 rounded p-1">💪</span>
+                            <span class="text-xl cursor-pointer hover:bg-gray-100 rounded p-1">🎉</span>
+                            <span class="text-xl cursor-pointer hover:bg-gray-100 rounded p-1">🔥</span>
+                            <span class="text-xl cursor-pointer hover:bg-gray-100 rounded p-1">🌟</span>
+                            <span class="text-xl cursor-pointer hover:bg-gray-100 rounded p-1">❤️</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Preview Full Layar -->
+                <div class="mb-6">
+                    <h4 class="text-sm font-medium text-text mb-3">Preview</h4>
+                    <div class="h-48 rounded-lg overflow-hidden relative" id="textStoryPreview">
+                        <div class="w-full h-full flex items-center justify-center story-bg-motivasi">
+                            <div class="story-text-content text-center">
+                                Preview akan muncul di sini
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Tombol Aksi -->
+                <div class="flex justify-between">
+                    <button class="px-4 py-2 text-text-light hover:text-text" id="cancelTextStory">
+                        Batal
+                    </button>
+                    <button class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark" id="postTextStory">
+                        Posting Story
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal Upload Foto -->
+    <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50" id="photoStoryModal">
+        <div class="bg-surface rounded-xl shadow-xl w-full max-w-lg mx-4">
+            <div class="p-6">
+                <h3 class="text-lg font-semibold text-text mb-4">Upload Foto untuk Story</h3>
+                
+                <!-- Area Upload -->
+                <div class="mb-6">
+                    <div class="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-primary transition-colors cursor-pointer" id="photoUploadArea">
+                        <i class="fas fa-cloud-upload-alt text-4xl text-gray-400 mb-3"></i>
+                        <p class="text-text-light mb-2">Klik untuk memilih foto</p>
+                        <p class="text-xs text-text-light mb-4">Atau seret dan lepas file di sini</p>
+                        <input type="file" id="photoFileInput" accept="image/*" class="hidden">
+                        <label for="photoFileInput" class="inline-block px-4 py-2 bg-primary text-white rounded-lg cursor-pointer hover:bg-primary-dark">
+                            Pilih Foto
+                        </label>
+                    </div>
+                    
+                    <!-- Kamera Langsung -->
+                    <div class="mt-4">
+                        <button class="w-full p-3 border border-gray-300 rounded-lg hover:bg-gray-50 flex items-center justify-center" id="openCameraBtn">
+                            <i class="fas fa-camera mr-2"></i>
+                            <span>Ambil Foto dari Kamera</span>
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Preview -->
+                <div class="mb-6 hidden" id="photoPreviewContainer">
+                    <h4 class="text-sm font-medium text-text mb-3">Preview Foto</h4>
+                    <div class="relative">
+                        <img src="" alt="Preview Foto" class="w-full h-64 object-cover rounded-lg" id="photoPreview">
+                        <button class="absolute top-2 right-2 bg-red-500 text-white rounded-full w-8 h-8 flex items-center justify-center" id="removePhotoBtn">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    
+                    <!-- Tambah Teks di Foto -->
+                    <div class="mt-4">
+                        <input 
+                            type="text" 
+                            placeholder="Tambahkan teks di foto (opsional)" 
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                            id="photoTextInput"
+                        >
+                    </div>
+                </div>
+                
+                <!-- Kamera Langsung View -->
+                <div class="mb-6 hidden" id="cameraView">
+                    <div class="relative">
+                        <video id="cameraPreview" class="w-full h-64 object-cover rounded-lg" autoplay></video>
+                        <div class="absolute bottom-4 left-0 right-0 flex justify-center">
+                            <button class="w-16 h-16 rounded-full bg-white border-4 border-gray-300 flex items-center justify-center" id="captureBtn">
+                                <div class="w-12 h-12 rounded-full bg-white border-2 border-gray-400"></div>
+                            </button>
+                        </div>
+                        <button class="absolute top-2 right-2 bg-red-500 text-white rounded-full w-8 h-8 flex items-center justify-center" id="closeCameraBtn">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Tombol Aksi -->
+                <div class="flex justify-between">
+                    <button class="px-4 py-2 text-text-light hover:text-text" id="cancelPhotoStory">
+                        Batal
+                    </button>
+                    <button class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark hidden" id="postPhotoStory">
+                        Posting Story
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Kontainer Utama -->
+    <div class="flex flex-col h-screen">
+        <!-- Header -->
+        <header class="bg-surface shadow-sm border-b border-gray-200">
+            <div class="container mx-auto px-4">
+                <div class="flex items-center justify-between py-3">
+                    <!-- Logo dan Nama Aplikasi -->
+                    <div class="flex items-center space-x-3">
+                        <button id="menuToggle" class="md:hidden text-text-light hover:text-primary focus:outline-none">
+                            <i class="fas fa-bars text-xl"></i>
+                        </button>
+                        <div class="flex items-center space-x-2">
+                            <div class="w-8 h-8 bg-gradient-to-r from-primary to-accent rounded-lg flex items-center justify-center">
+                                <i class="fas fa-comments text-white"></i>
+                            </div>
+                            <h1 class="text-xl font-bold italks-logo">iTalks</h1>
+                        </div>
+                    </div>
+                    
+                    <!-- Bar Pencarian -->
+                    <div class="hidden md:flex flex-1 max-w-md mx-4">
+                        <div class="relative w-full">
+                            <input 
+                                type="text" 
+                                placeholder="Cari pesan, kontak..." 
+                                class="w-full px-4 py-2 pl-10 bg-gray-100 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                                id="searchInput"
+                            >
+                            <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+                        </div>
+                    </div>
+                    
+                    <!-- Aksi Pengguna -->
+                    <div class="flex items-center space-x-4">
+                        <!-- Tombol Pencarian Mobile -->
+                        <button class="md:hidden text-text-light hover:text-primary" id="mobileSearchBtn">
+                            <i class="fas fa-search text-xl"></i>
+                        </button>
+                        
+                        <!-- Tombol Story -->
+                        <button class="text-text-light hover:text-primary relative" id="addStoryBtn">
+                            <i class="fas fa-plus-circle text-xl"></i>
+                        </button>
+                        
+                        <!-- Notifikasi -->
+                        <div class="relative">
+                            <button class="text-text-light hover:text-primary relative" id="notificationsBtn">
+                                <i class="fas fa-bell text-xl"></i>
+                                <span class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">3</span>
+                            </button>
+                            <!-- Dropdown Notifikasi -->
+                            <div class="absolute right-0 mt-2 w-80 bg-surface shadow-xl rounded-xl border border-gray-200 hidden z-10" id="notificationsDropdown">
+                                <div class="p-4 border-b border-gray-200">
+                                    <h3 class="font-semibold text-text">Notifikasi</h3>
+                                </div>
+                                <div class="max-h-64 overflow-y-auto">
+                                    <!-- Item notifikasi akan diisi oleh JS -->
+                                </div>
+                                <div class="p-3 border-t border-gray-200 text-center">
+                                    <a href="#" class="text-primary hover:text-primary-dark text-sm font-medium">Lihat Semua</a>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Profil Pengguna -->
+                        <div class="relative">
+                            <button class="flex items-center space-x-2 focus:outline-none" id="profileBtn">
+                                <div class="relative">
+                                    <img 
+                                        src="https://randomuser.me/api/portraits/men/32.jpg" 
+                                        alt="Adnan Ghulwani" 
+                                        class="w-8 h-8 rounded-full"
+                                    >
+                                    <div class="online-status online"></div>
+                                </div>
+                                <span class="hidden md:inline font-medium text-text">Adnan Ghulwani</span>
+                                <i class="fas fa-chevron-down text-text-light text-sm"></i>
+                            </button>
+                            <!-- Dropdown Profil -->
+                            <div class="absolute right-0 mt-2 w-48 bg-surface shadow-xl rounded-xl border border-gray-200 hidden z-10" id="profileDropdown">
+                                <div class="py-2">
+                                    <a href="#" class="flex items-center px-4 py-2 text-text hover:bg-gray-100">
+                                        <i class="fas fa-user-circle mr-3 text-text-light"></i>
+                                        <span>Profil Saya</span>
+                                    </a>
+                                    <a href="#" class="flex items-center px-4 py-2 text-text hover:bg-gray-100">
+                                        <i class="fas fa-cog mr-3 text-text-light"></i>
+                                        <span>Pengaturan</span>
+                                    </a>
+                                    <a href="#" class="flex items-center px-4 py-2 text-text hover:bg-gray-100">
+                                        <i class="fas fa-moon mr-3 text-text-light"></i>
+                                        <span>Mode Gelap</span>
+                                    </a>
+                                    <div class="border-t border-gray-200 my-1"></div>
+                                    <a href="#" class="flex items-center px-4 py-2 text-red-600 hover:bg-gray-100">
+                                        <i class="fas fa-sign-out-alt mr-3"></i>
+                                        <span>Keluar</span>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Bar Pencarian Mobile -->
+                <div class="md:hidden py-3 hidden" id="mobileSearchBar">
+                    <div class="relative">
+                        <input 
+                            type="text" 
+                            placeholder="Cari pesan, kontak..." 
+                            class="w-full px-4 py-2 pl-10 bg-gray-100 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                        >
+                        <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+                    </div>
+                </div>
+            </div>
+        </header>
+        
+        <!-- Konten Utama -->
+        <main class="flex flex-1 overflow-hidden">
+            <!-- Sidebar Kontak -->
+            <aside class="contacts-sidebar w-full md:w-80 bg-surface border-r border-gray-200 flex flex-col md:static md:block">
+                <!-- Header Sidebar -->
+                <div class="p-4 border-b border-gray-200">
+                    <div class="flex items-center justify-between">
+                        <h2 class="text-lg font-semibold text-text">Percakapan</h2>
+                        <button class="text-primary hover:text-primary-dark" id="newChatBtn">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                    </div>
+                    
+                    <!-- Filter Chat -->
+                    <div class="flex space-x-2 mt-4">
+                        <button class="px-3 py-1 bg-primary text-white rounded-full text-sm font-medium">Semua</button>
+                        <button class="px-3 py-1 bg-gray-100 text-text-light hover:bg-gray-200 rounded-full text-sm font-medium">Belum Dibaca</button>
+                        <button class="px-3 py-1 bg-gray-100 text-text-light hover:bg-gray-200 rounded-full text-sm font-medium">Grup</button>
+                    </div>
+                    
+                    <!-- Section Story -->
+                    <div class="mt-4">
+                        <h3 class="text-sm font-medium text-text mb-2">Story iTalks</h3>
+                        <div class="flex space-x-3 overflow-x-auto pb-2" id="storiesList">
+                            <!-- Story akan diisi oleh JavaScript -->
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Daftar Kontak -->
+                <div class="flex-1 overflow-y-auto scrollbar-thin" id="contactsList">
+                    <!-- Kontak akan diisi oleh JavaScript -->
+                </div>
+                
+                <!-- Footer Sidebar -->
+                <div class="p-4 border-t border-gray-200">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-3">
+                            <div class="relative">
+                                <img 
+                                    src="https://randomuser.me/api/portraits/men/32.jpg" 
+                                    alt="Adnan Ghulwani" 
+                                    class="w-10 h-10 rounded-full"
+                                >
+                                <div class="online-status online"></div>
+                            </div>
+                            <div>
+                                <p class="font-medium text-text">Adnan Ghulwani</p>
+                                <p class="text-xs text-text-light">Online</p>
+                            </div>
+                        </div>
+                        <button class="text-text-light hover:text-primary" id="sidebarSettingsBtn">
+                            <i class="fas fa-ellipsis-v"></i>
+                        </button>
+                    </div>
+                </div>
+            </aside>
+            
+            <!-- Area Chat -->
+            <div class="flex-1 flex flex-col">
+                <!-- Header Chat -->
+                <div class="bg-surface border-b border-gray-200 p-4">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-3">
+                            <button class="md:hidden text-text-light hover:text-primary" id="backToContacts">
+                                <i class="fas fa-arrow-left"></i>
+                            </button>
+                            <div class="group-avatar">
+                                <img src="https://randomuser.me/api/portraits/men/22.jpg" alt="Anggota 1">
+                                <img src="https://randomuser.me/api/portraits/women/44.jpg" alt="Anggota 2">
+                                <img src="https://randomuser.me/api/portraits/women/33.jpg" alt="Anggota 3">
+                            </div>
+                            <div>
+                                <h2 class="font-semibold text-text" id="currentChatName">Grup Kuliah SI 2023</h2>
+                                <p class="text-sm text-text-light" id="currentChatStatus">12 anggota • 5 online</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-4">
+                            <button class="text-text-light hover:text-primary">
+                                <i class="fas fa-phone-alt"></i>
+                            </button>
+                            <button class="text-text-light hover:text-primary">
+                                <i class="fas fa-video"></i>
+                            </button>
+                            <button class="text-text-light hover:text-primary" id="chatInfoBtn">
+                                <i class="fas fa-info-circle"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Kontainer Pesan -->
+                <div class="flex-1 overflow-y-auto p-4 bg-gray-50 chat-container scrollbar-thin" id="messagesContainer">
+                    <!-- Pesan akan diisi oleh JavaScript -->
+                </div>
+                
+                <!-- Indikator Mengetik -->
+                <div class="px-4 py-2 hidden" id="typingIndicator">
+                    <div class="flex items-center space-x-2">
+                        <div class="relative">
+                            <img 
+                                src="https://randomuser.me/api/portraits/women/44.jpg" 
+                                alt="Pengguna sedang mengetik" 
+                                class="w-8 h-8 rounded-full"
+                            >
+                        </div>
+                        <div class="bg-gray-200 rounded-2xl rounded-tl-none px-4 py-2">
+                            <div class="typing-indicator">
+                                <span></span>
+                                <span></span>
+                                <span></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Input Pesan -->
+                <div class="bg-surface border-t border-gray-200 p-4">
+                    <div class="flex items-center space-x-3">
+                        <button class="text-text-light hover:text-primary">
+                            <i class="fas fa-plus-circle text-xl"></i>
+                        </button>
+                        <button class="text-text-light hover:text-primary">
+                            <i class="fas fa-image text-xl"></i>
+                        </button>
+                        <button class="text-text-light hover:text-primary">
+                            <i class="fas fa-paperclip text-xl"></i>
+                        </button>
+                        
+                        <div class="flex-1 relative">
+                            <input 
+                                type="text" 
+                                placeholder="Ketik pesan di iTalks..." 
+                                class="w-full px-4 py-3 bg-gray-100 rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                                id="messageInput"
+                            >
+                            <button class="absolute right-3 top-3 text-text-light hover:text-primary">
+                                <i class="far fa-smile text-xl"></i>
+                            </button>
+                        </div>
+                        
+                        <button class="bg-primary hover:bg-primary-dark text-white rounded-full w-10 h-10 flex items-center justify-center" id="sendMessageBtn">
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                    </div>
+                    
+                    <!-- Aksi Cepat -->
+                    <div class="flex items-center justify-between mt-3 text-xs text-text-light">
+                        <div class="flex space-x-4">
+                            <button class="hover:text-primary">
+                                <i class="fas fa-microphone mr-1"></i>
+                                Pesan Suara
+                            </button>
+                            <button class="hover:text-primary">
+                                <i class="fas fa-map-marker-alt mr-1"></i>
+                                Lokasi
+                            </button>
+                        </div>
+                        <div>
+                            <span>Tekan Enter untuk mengirim</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Sidebar Info Chat (Tersembunyi di mobile secara default) -->
+            <aside class="hidden lg:block w-80 bg-surface border-l border-gray-200" id="chatInfoSidebar">
+                <div class="p-4 border-b border-gray-200">
+                    <div class="flex items-center justify-between">
+                        <h3 class="font-semibold text-text">Info Grup</h3>
+                        <button class="text-text-light hover:text-primary" id="closeChatInfo">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="p-4">
+                    <!-- Info Grup -->
+                    <div class="text-center mb-6">
+                        <div class="group-avatar mx-auto mb-3" style="width: 80px; height: 80px;">
+                            <img src="https://randomuser.me/api/portraits/men/22.jpg" alt="Anggota 1" style="width: 48px; height: 48px;">
+                            <img src="https://randomuser.me/api/portraits/women/44.jpg" alt="Anggota 2" style="width: 48px; height: 48px;">
+                            <img src="https://randomuser.me/api/portraits/women/33.jpg" alt="Anggota 3" style="width: 48px; height: 48px;">
+                        </div>
+                        <h4 class="font-semibold text-text text-lg">Grup Kuliah SI 2023</h4>
+                        <p class="text-text-light text-sm">Sistem Informasi Angkatan 2023</p>
+                        <div class="flex items-center justify-center mt-2">
+                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                <span class="w-2 h-2 bg-green-500 rounded-full mr-1"></span>
+                                Aktif
+                            </span>
+                        </div>
+                    </div>
+                    
+                    <!-- Anggota Grup -->
+                    <div class="mb-6">
+                        <h5 class="font-medium text-text mb-3">Anggota (12)</h5>
+                        <div class="space-y-3">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center">
+                                    <div class="relative mr-3">
+                                        <img src="https://randomuser.me/api/portraits/men/32.jpg" alt="Adnan Ghulwani" class="w-8 h-8 rounded-full">
+                                        <div class="online-status online"></div>
+                                    </div>
+                                    <div>
+                                        <p class="text-sm font-medium text-text">Adnan Ghulwani</p>
+                                        <p class="text-xs text-text-light">Anda</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center">
+                                    <div class="relative mr-3">
+                                        <img src="https://randomuser.me/api/portraits/women/44.jpg" alt="Sari Dewi" class="w-8 h-8 rounded-full">
+                                        <div class="online-status online"></div>
+                                    </div>
+                                    <p class="text-sm font-medium text-text">Sari Dewi</p>
+                                </div>
+                                <span class="text-xs text-primary font-medium">Admin</span>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center">
+                                    <div class="relative mr-3">
+                                        <img src="https://randomuser.me/api/portraits/men/22.jpg" alt="Dedi Kurniawan" class="w-8 h-8 rounded-full">
+                                        <div class="online-status away"></div>
+                                    </div>
+                                    <p class="text-sm font-medium text-text">Dedi Kurniawan</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center">
+                                    <div class="relative mr-3">
+                                        <img src="https://randomuser.me/api/portraits/women/33.jpg" alt="Maya Fitri" class="w-8 h-8 rounded-full">
+                                        <div class="online-status online"></div>
+                                    </div>
+                                    <p class="text-sm font-medium text-text">Maya Fitri</p>
+                                </div>
+                            </div>
+                            <div class="text-center">
+                                <button class="text-primary text-sm font-medium">Lihat semua anggota</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Media, File, Tautan -->
+                    <div class="space-y-4">
+                        <div>
+                            <h5 class="font-medium text-text mb-2">Media, File & Tautan</h5>
+                            <div class="grid grid-cols-3 gap-2">
+                                <img src="https://images.unsplash.com/photo-1523050854058-8df90110c9f1?ixlib=rb-1.2.1&auto=format&fit=crop&w=200&q=80" alt="Media 1" class="rounded-lg">
+                                <img src="https://images.unsplash.com/photo-1517077304055-6e89abbf09b0?ixlib=rb-1.2.1&auto=format&fit=crop&w=200&q=80" alt="Media 2" class="rounded-lg">
+                                <img src="https://images.unsplash.com/photo-1543269865-cbf427effbad?ixlib=rb-1.2.1&auto=format&fit=crop&w=200&q=80" alt="Media 3" class="rounded-lg">
+                                <div class="bg-gray-100 rounded-lg flex items-center justify-center h-20">
+                                    <span class="text-text-light">+24 lebih</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Pengaturan Grup -->
+                        <div>
+                            <h5 class="font-medium text-text mb-2">Pengaturan Grup</h5>
+                            <div class="space-y-2">
+                                <button class="flex items-center justify-between w-full p-2 hover:bg-gray-50 rounded-lg">
+                                    <div class="flex items-center">
+                                        <i class="fas fa-bell text-text-light mr-3"></i>
+                                        <span class="text-text">Notifikasi Grup</span>
+                                    </div>
+                                    <i class="fas fa-chevron-right text-text-light"></i>
+                                </button>
+                                <button class="flex items-center justify-between w-full p-2 hover:bg-gray-50 rounded-lg">
+                                    <div class="flex items-center">
+                                        <i class="fas fa-user-plus text-text-light mr-3"></i>
+                                        <span class="text-text">Undang Anggota</span>
+                                    </div>
+                                    <i class="fas fa-chevron-right text-text-light"></i>
+                                </button>
+                                <button class="flex items-center justify-between w-full p-2 hover:bg-gray-50 rounded-lg">
+                                    <div class="flex items-center">
+                                        <i class="fas fa-search text-text-light mr-3"></i>
+                                        <span class="text-text">Cari dalam Chat</span>
+                                    </div>
+                                    <i class="fas fa-chevron-right text-text-light"></i>
+                                </button>
+                                <button class="flex items-center justify-between w-full p-2 hover:bg-gray-50 rounded-lg text-red-600">
+                                    <div class="flex items-center">
+                                        <i class="fas fa-trash-alt mr-3"></i>
+                                        <span>Hapus Riwayat Chat</span>
+                                    </div>
+                                    <i class="fas fa-chevron-right"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </aside>
+        </main>
+        
+        <!-- Modal Chat Baru -->
+        <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50" id="newChatModal">
+            <div class="bg-surface rounded-xl shadow-xl w-full max-w-md mx-4">
+                <div class="p-6">
+                    <h3 class="text-lg font-semibold text-text mb-4">Chat Baru di iTalks</h3>
+                    <div class="mb-4">
+                        <input 
+                            type="text" 
+                            placeholder="Cari kontak..." 
+                            class="w-full px-4 py-2 bg-gray-100 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                            id="newChatSearch"
+                        >
+                    </div>
+                    <div class="max-h-64 overflow-y-auto mb-4">
+                        <!-- Daftar kontak untuk chat baru akan diisi oleh JS -->
+                    </div>
+                    <div class="flex justify-end space-x-3">
+                        <button class="px-4 py-2 text-text-light hover:text-text" id="cancelNewChat">
+                            Batal
+                        </button>
+                        <button class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark" id="startNewChat">
+                            Mulai Chat
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Data kontak dengan Grup Kuliah SI 2023
+        const contacts = [
+            {
+                "id": 1,
+                "name": "Grup Kuliah SI 2023",
+                "group_avatar": "https://i.pravatar.cc/150?img=54",
+                "lastMessage": "Besok ada tugas kelompok ya",
+                "timestamp": "10:30",
+                "unreadCount": 5,
+                "status": "group",
+                "isTyping": true,
+                "isGroup": true,
+                "members": 12,
+                "isMainGroup": true,
+                "gender": "mixed"
+            },
+            {
+                "id": 2,
+                "name": "Sari Dewi",
+                "avatar": "https://randomuser.me/api/portraits/women/44.jpg",
+                "lastMessage":"Nanti kita ketemu dimana?",
+                "timestamp": "Kemarin",
+                "unreadCount": 0,
+                "status": "online",
+                "isTyping": false,
+                "gender": "female"
+            },
+            {
+                "id": 3,
+                "name": "Dedi Kurniawan",
+                "avatar": "https://randomuser.me/api/portraits/men/22.jpg",
+                "lastMessage": "File presentasi udah ku kirim",
+                "timestamp": "2 hari lalu",
+                "unreadCount": 1,
+                "status": "away",
+                "isTyping": false,
+                "gender": "male"
+            },
+            {
+                "id": 4,
+                "name": "Grup Praktikum",
+                "avatar": "",
+                "lastMessage":"Besok praktikum di lab 3",
+                "timestamp": "3 hari lalu",
+                "unreadCount": 0,
+                "status": "group",
+                "isTyping": false,
+                "isGroup": true,
+                "members": 5,
+                "gender": "mixed"
+            },
+            {
+                "id": 5,
+                "name": "Maya Fitri",
+                "avatar": "https://randomuser.me/api/portraits/women/33.jpg",
+                "lastMessage": "Makasih bantuannya ya",
+                "timestamp": "Hari ini",
+                "unreadCount": 0,
+                "status": "offline",
+                "isTyping": false,
+                "gender": "female"
+            },
+            {
+                "id": 6,
+                "name": "Ahmad Fauzi",
+                "avatar": "https://randomuser.me/api/portraits/men/67.jpg",
+                "lastMessage": "Jangan lupa bayar uang kas",
+                "timestamp": "Hari Ini",
+                "unreadCount": 0,
+                "status": "online",
+                "isTyping": false,
+                "gender": "male"
+            },
+            {
+                "id": 7,
+                "name": "Grup Organisasi",
+                "avatar": "",
+                "lastMessage": "Besok ada rapat jam 4",
+                "timestamp": "2 jam yang lalu",
+                "unreadCount": 15,
+                "status": "group",
+                "isTyping": false,
+                "isGroup": true,
+                "members": 7,
+                "gender": "mixed"
+            },
+            {
+                "id": 8,
+                "name": "Rina Amelia",
+                "avatar": "https://randomuser.me/api/portraits/women/68.jpg",
+                "lastMessage": "Foto kampus bagus banget",
+                "timestamp": "1 jam lalu",
+                "unreadCount": 2,
+                "status": "online",
+                "isTyping": false,
+                "gender": "female"
+            },
+            {
+                "id": 9,
+                "name": "Budi Santoso",
+                "avatar": "https://randomuser.me/api/portraits/men/75.jpg",
+                "lastMessage": "Kapan kita nongkrong?",
+                "timestamp": "30 menit lalu",
+                "unreadCount": 0,
+                "status": "online",
+                "isTyping": false,
+                "gender": "male"
+            }
+        ];
+
+        // Data story teman-teman (teks dan foto)
+        const stories = [
+            {
+                "id": 1,
+                "userId": 8,
+                "userName": "Rina Amelia",
+                "userAvatar": "https://randomuser.me/api/portraits/women/68.jpg",
+                "content": "Hari ini semangat belajar! 💪\n\nJangan pernah berhenti berusaha untuk mencapai impianmu! ✨",
+                "background": "story-bg-motivasi",
+                "time": "2 jam lalu",
+                "viewed": false,
+                "type": "text"
+            },
+            {
+                "id": 2,
+                "userId": 2,
+                "userName": "Sari Dewi",
+                "userAvatar": "https://randomuser.me/api/portraits/women/44.jpg",
+                "image": "https://images.unsplash.com/photo-1517697471339-4aa32003c11a?ixlib=rb-1.2.1&auto=format&fit=crop&w=1200&q=80",
+                "textOverlay": "Momen terbaik bersama teman-teman! 🎉",
+                "time": "4 jam lalu",
+                "viewed": false,
+                "type": "image"
+            },
+            {
+                "id": 3,
+                "userId": 3,
+                "userName": "Dedi Kurniawan",
+                "userAvatar": "https://randomuser.me/api/portraits/men/22.jpg",
+                "content": "Presentasi berjalan lancar!\n\nAlhamdulillah semua kerja keras terbayar sudah. 🎓",
+                "background": "story-bg-segar",
+                "time": "6 jam lalu",
+                "viewed": true,
+                "type": "text"
+            },
+            {
+                "id": 4,
+                "userId": 5,
+                "userName": "Maya Fitri",
+                "userAvatar": "https://randomuser.me/api/portraits/women/33.jpg",
+                "image": "https://images.unsplash.com/photo-1543269865-cbf427effbad?ixlib=rb-1.2.1&auto=format&fit=crop&w=1200&q=80",
+                "textOverlay": "Sunset yang sempurna untuk mengakhiri hari 🌅",
+                "time": "8 jam lalu",
+                "viewed": false,
+                "type": "image"
+            },
+            {
+                "id": 5,
+                "userId": 6,
+                "userName": "Ahmad Fauzi",
+                "userAvatar": "https://randomuser.me/api/portraits/men/67.jpg",
+                "content": "Deadline tugas akhir semakin dekat! 😅\n\nTetap semangat dan jangan menyerah! 🔥",
+                "background": "story-bg-energik",
+                "time": "12 jam lalu",
+                "viewed": true,
+                "type": "text"
+            },
+            {
+                "id": 6,
+                "userId": 9,
+                "userName": "Budi Santoso",
+                "userAvatar": "https://randomuser.me/api/portraits/men/75.jpg",
+                "image": "https://images.unsplash.com/photo-1542744173-8e7e53415bb0?ixlib=rb-1.2.1&auto=format&fit=crop&w=1200&q=80",
+                "textOverlay": "Meeting produktif dengan tim! 📊",
+                "time": "1 hari lalu",
+                "viewed": false,
+                "type": "image"
+            }
+        ];
+
+        // Data pesan untuk Grup Kuliah SI 2023
+        const messages = [
+            {
+                "id": 1,
+                "contactId": 1,
+                "sender": "Dedi Kurniawan",
+                "avatar": "https://randomuser.me/api/portraits/men/22.jpg",
+                "content": "Ada yang bawa materi UAS?",
+                "timestamp": "08:30",
+                "isOwn": false,
+                "status": "read"
+            },
+            {
+                "id": 2,
+                "contactId": 1,
+                "sender": "Sari Dewi",
+                "avatar": "https://randomuser.me/api/portraits/women/44.jpg",
+                "content": "Besok ada quiz dadakan",
+                "timestamp": "08:32",
+                "isOwn": false,
+                "status": "read"
+            },
+            {
+                "id": 3,
+                "contactId": 1,
+                "sender": "Adnan",
+                "avatar": "https://randomuser.me/api/portraits/men/32.jpg",
+                "content": "Link zoom udah dibagi belum?",
+                "timestamp": "08:35",
+                "isOwn": true,
+                "status": "read"
+            },
+            {
+                "id": 4,
+                "contactId": 1,
+                "sender": "Maya Fitri",
+                "avatar": "https://randomuser.me/api/portraits/women/33.jpg",
+                "content": "Nanti ketemu di kantin ya",
+                "timestamp": "08:40",
+                "isOwn": false,
+                "status": "read"
+            },
+            {
+                "id": 5,
+                "contactId": 1,
+                "sender": "Rina Amelia",
+                "avatar": "https://randomuser.me/api/portraits/women/68.jpg",
+                "content": "Tugas kelompok dikumpul kapan?",
+                "timestamp": "08:42",
+                "isOwn": false,
+                "status": "read"
+            },
+            {
+                "id": 6,
+                "contactId": 1,
+                "sender": "Adnan",
+                "avatar": "https://randomuser.me/api/portraits/men/32.jpg",
+                "content": "Besok jam 9 di perpustakaan",
+                "timestamp": "08:45",
+                "isOwn": true,
+                "status": "read"
+            },
+            {
+                "id": 7,
+                "contactId": 1,
+                "sender": "Ahmad Fauzi",
+                "avatar": "https://randomuser.me/api/portraits/men/67.jpg",
+                "content": "Presentasi kelompok 3 maju minggu depan",
+                "timestamp": "09:00",
+                "isOwn": false,
+                "status": "read"
+            },
+            {
+                "id": 8,
+                "contactId": 1,
+                "sender": "Adnan",
+                "avatar": "https://randomuser.me/api/portraits/men/32.jpg",
+                "content": "Oke siap, nanti saya bawa laptop",
+                "timestamp": "10:00",
+                "isOwn": true,
+                "status": "delivered"
+            }
+        ];
+
+        // Notifikasi dalam bahasa Indonesia
+        const notifications = [
+            {
+                "id": 1,
+                "title": "Pesan Grup",
+                "message": "Grup Kuliah SI 2023: 8 pesan baru",
+                "time": "2 menit lalu",
+                "read": false,
+                "type": "group"
+            },
+            {
+                "id": 2,
+                "title": "Story Baru",
+                "message": "Rina Amelia mengupload story baru di iTalks",
+                "time": "1 jam lalu",
+                "read": false,
+                "type": "story"
+            },
+            {
+                "id": 3,
+                "title": "Panggilan Grup",
+                "message": "Missed call dari Grup Kuliah SI 2023",
+                "time": "3 jam lalu",
+                "read": true,
+                "type": "call"
+            },
+            {
+                "id": 4,
+                "title": "File Diterima",
+                "message": "Budi Santoso membagikan dokumen di Grup Kuliah",
+                "time": "Kemarin",
+                "read": true,
+                "type": "file"
+            }
+        ];
+
+        // State saat ini
+        let currentChatId = 1;
+        let currentUser = {
+            "id": 0,
+            "name": "Adnan Ghulwani",
+            "avatar": "https://randomuser.me/api/portraits/men/32.jpg",
+            "status": "online",
+            "gender": "male"
+        };
+        
+        let currentStoryIndex = 0;
+        let myStories = [
+            {
+                "id": 7,
+                "userId": 0,
+                "userName": "Adnan Ghulwani",
+                "userAvatar": "https://randomuser.me/api/portraits/men/32.jpg",
+                "content": "Selamat datang di iTalks! ✨\n\nAplikasi chat dengan fitur story yang amazing! 💬",
+                "background": "story-bg-motivasi",
+                "time": "Baru saja",
+                "viewed": false,
+                "type": "text"
+            }
+        ];
+        let allStories = [...myStories, ...stories];
+        let selectedBackground = "story-bg-motivasi";
+        let currentPhotoData = null;
+        let photoTextOverlay = "";
+
+        // Elemen DOM
+        const contactsList = document.getElementById('contactsList');
+        const messagesContainer = document.getElementById('messagesContainer');
+        const messageInput = document.getElementById('messageInput');
+        const sendMessageBtn = document.getElementById('sendMessageBtn');
+        const searchInput = document.getElementById('searchInput');
+        const notificationsBtn = document.getElementById('notificationsBtn');
+        const notificationsDropdown = document.getElementById('notificationsDropdown');
+        const profileBtn = document.getElementById('profileBtn');
+        const profileDropdown = document.getElementById('profileDropdown');
+        const menuToggle = document.getElementById('menuToggle');
+        const contactsSidebar = document.querySelector('.contacts-sidebar');
+        const overlay = document.getElementById('overlay');
+        const backToContacts = document.getElementById('backToContacts');
+        const chatInfoBtn = document.getElementById('chatInfoBtn');
+        const chatInfoSidebar = document.getElementById('chatInfoSidebar');
+        const closeChatInfo = document.getElementById('closeChatInfo');
+        const newChatBtn = document.getElementById('newChatBtn');
+        const newChatModal = document.getElementById('newChatModal');
+        const cancelNewChat = document.getElementById('cancelNewChat');
+        const startNewChat = document.getElementById('startNewChat');
+        const newChatSearch = document.getElementById('newChatSearch');
+        const mobileSearchBtn = document.getElementById('mobileSearchBtn');
+        const mobileSearchBar = document.getElementById('mobileSearchBar');
+        const typingIndicator = document.getElementById('typingIndicator');
+        const currentChatName = document.getElementById('currentChatName');
+        const currentChatStatus = document.getElementById('currentChatStatus');
+        const storiesList = document.getElementById('storiesList');
+        const addStoryBtn = document.getElementById('addStoryBtn');
+        const storyModal = document.getElementById('storyModal');
+        const closeStory = document.getElementById('closeStory');
+        const storyContentArea = document.getElementById('storyContentArea');
+        const storyUserName = document.getElementById('storyUserName');
+        const storyUserAvatar = document.getElementById('storyUserAvatar');
+        const storyTime = document.getElementById('storyTime');
+        const prevStory = document.getElementById('prevStory');
+        const nextStory = document.getElementById('nextStory');
+        const storyProgressBars = document.getElementById('storyProgressBars');
+        const createStoryModal = document.getElementById('createStoryModal');
+        const closeCreateStoryModal = document.getElementById('closeCreateStoryModal');
+        const textStoryBtn = document.getElementById('textStoryBtn');
+        const photoStoryBtn = document.getElementById('photoStoryBtn');
+        const textStoryModal = document.getElementById('textStoryModal');
+        const cancelTextStory = document.getElementById('cancelTextStory');
+        const postTextStory = document.getElementById('postTextStory');
+        const storyTextInput = document.getElementById('storyTextInput');
+        const textStoryPreview = document.getElementById('textStoryPreview');
+        const emojiBtn = document.getElementById('emojiBtn');
+        const emojiPicker = document.getElementById('emojiPicker');
+        const photoStoryModal = document.getElementById('photoStoryModal');
+        const cancelPhotoStory = document.getElementById('cancelPhotoStory');
+        const photoUploadArea = document.getElementById('photoUploadArea');
+        const photoFileInput = document.getElementById('photoFileInput');
+        const photoPreview = document.getElementById('photoPreview');
+        const photoPreviewContainer = document.getElementById('photoPreviewContainer');
+        const removePhotoBtn = document.getElementById('removePhotoBtn');
+        const photoTextInput = document.getElementById('photoTextInput');
+        const openCameraBtn = document.getElementById('openCameraBtn');
+        const cameraView = document.getElementById('cameraView');
+        const cameraPreview = document.getElementById('cameraPreview');
+        const captureBtn = document.getElementById('captureBtn');
+        const closeCameraBtn = document.getElementById('closeCameraBtn');
+        const postPhotoStory = document.getElementById('postPhotoStory');
+        const storyLikeBtn = document.getElementById('storyLikeBtn');
+        const storySendBtn = document.getElementById('storySendBtn');
+        const storyCommentInput = document.getElementById('storyCommentInput');
+
+        // Inisialisasi aplikasi
+        function initApp() {
+            renderContacts();
+            renderMessages(currentChatId);
+            renderNotifications();
+            renderStories();
+            setupEventListeners();
+            updateCurrentChatInfo();
+            setupTextStoryPreview();
+        }
+
+        // Render daftar kontak
+        function renderContacts(filter = '') {
+            contactsList.innerHTML = '';
+            
+            const filteredContacts = contacts.filter(contact => 
+                contact.name.toLowerCase().includes(filter.toLowerCase())
+            );
+            
+            filteredContacts.forEach(contact => {
+                const contactElement = document.createElement('div');
+                contactElement.className = `p-4 border-b border-gray-100 hover:bg-gray-50 cursor-pointer transition-colors ${contact.id === currentChatId ? 'bg-blue-50' : ''}`;
+                contactElement.dataset.contactId = contact.id;
+                
+                const statusClass = contact.status === 'online' ? 'online' : 
+                                  contact.status === 'away' ? 'away' : 'offline';
+                
+                // Untuk grup utama, tampilkan avatar khusus
+                let avatarHTML = '';
+                if (contact.isMainGroup) {
+                    avatarHTML = `
+                        <div class="group-avatar" style="width: 48px; height: 48px;">
+                            <img src="https://randomuser.me/api/portraits/men/22.jpg" alt="Anggota 1">
+                            <img src="https://randomuser.me/api/portraits/women/44.jpg" alt="Anggota 2">
+                            <img src="https://randomuser.me/api/portraits/women/33.jpg" alt="Anggota 3">
+                        </div>
+                    `;
+                } else if (contact.isGroup) {
+                    avatarHTML = `
+                        <div class="relative">
+                            <div class="w-12 h-12 rounded-full bg-gradient-to-r from-primary to-accent flex items-center justify-center">
+                                <i class="fas fa-users text-white"></i>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    // Gunakan avatar berdasarkan gender
+                    const avatarUrl = contact.avatar || (contact.gender === 'female' ? 
+                        'https://randomuser.me/api/portraits/women/1.jpg' : 
+                        'https://randomuser.me/api/portraits/men/1.jpg');
+                    
+                    avatarHTML = `
+                        <div class="relative">
+                            <img src="${avatarUrl}" alt="${contact.name}" class="w-12 h-12 rounded-full">
+                            <div class="online-status ${statusClass}"></div>
+                        </div>
+                    `;
+                }
+                
+                contactElement.innerHTML = `
+                    <div class="flex items-center space-x-3">
+                        ${avatarHTML}
+                        <div class="flex-1 min-w-0">
+                            <div class="flex justify-between items-start">
+                                <h4 class="font-medium text-text truncate">${contact.name}</h4>
+                                <span class="text-xs text-text-light whitespace-nowrap">${contact.timestamp}</span>
+                            </div>
+                            <div class="flex justify-between items-center mt-1">
+                                <p class="text-sm text-text-light truncate">
+                                    ${contact.isTyping ? 
+                                        '<span class="text-primary font-medium"><i class="fas fa-circle text-xs mr-1"></i>Sedang mengetik...</span>' : 
+                                        contact.lastMessage}
+                                </p>
+                                ${contact.unreadCount > 0 ? `
+                                    <span class="bg-primary text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                                        ${contact.unreadCount}
+                                    </span>
+                                ` : ''}
+                            </div>
+                            ${contact.isGroup ? `
+                                <div class="flex items-center mt-1">
+                                    <span class="text-xs text-text-light">
+                                        <i class="fas fa-users mr-1"></i>${contact.members} anggota
+                                    </span>
+                                </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                `;
+                
+                contactElement.addEventListener('click', () => {
+                    currentChatId = contact.id;
+                    renderContacts();
+                    renderMessages(currentChatId);
+                    updateCurrentChatInfo();
+                    
+                    // Di mobile, sembunyikan sidebar kontak saat chat dipilih
+                    if (window.innerWidth < 768) {
+                        contactsSidebar.classList.remove('active');
+                        overlay.classList.remove('active');
+                    }
+                });
+                
+                contactsList.appendChild(contactElement);
+            });
+        }
+
+        // Render story
+        function renderStories() {
+            storiesList.innerHTML = '';
+            
+            // Story sendiri
+            const myStoryElement = document.createElement('div');
+            myStoryElement.className = 'flex flex-col items-center';
+            myStoryElement.innerHTML = `
+                <div class="story-ring-my mb-1 cursor-pointer" id="myStory">
+                    <div class="w-12 h-12 rounded-full overflow-hidden">
+                        <img src="${currentUser.avatar}" alt="${currentUser.name}" class="w-full h-full object-cover">
+                    </div>
+                    <div class="absolute -bottom-1 -right-1 w-6 h-6 bg-primary rounded-full flex items-center justify-center border-2 border-white">
+                        <i class="fas fa-plus text-white text-xs"></i>
+                    </div>
+                </div>
+                <span class="text-xs text-text-light truncate max-w-[56px]">Story Saya</span>
+            `;
+            storiesList.appendChild(myStoryElement);
+            
+            // Story teman-teman
+            stories.forEach(story => {
+                const storyElement = document.createElement('div');
+                storyElement.className = 'flex flex-col items-center';
+                storyElement.dataset.storyId = story.id;
+                
+                const storyRingClass = story.viewed ? 'story-ring viewed' : 'story-ring';
+                const storyIcon = story.type === 'text' ? 
+                    '<div class="absolute -bottom-1 -right-1 w-5 h-5 bg-primary rounded-full flex items-center justify-center border-2 border-white"><i class="fas fa-font text-white text-xs"></i></div>' : 
+                    '<div class="absolute -bottom-1 -right-1 w-5 h-5 bg-secondary rounded-full flex items-center justify-center border-2 border-white"><i class="fas fa-camera text-white text-xs"></i></div>';
+                
+                storyElement.innerHTML = `
+                    <div class="${storyRingClass} mb-1 cursor-pointer relative">
+                        <div class="w-12 h-12 rounded-full overflow-hidden">
+                            <img src="${story.userAvatar}" alt="${story.userName}" class="w-full h-full object-cover">
+                        </div>
+                        ${storyIcon}
+                    </div>
+                    <span class="text-xs text-text-light truncate max-w-[56px]">${story.userName}</span>
+                `;
+                
+                storyElement.addEventListener('click', () => {
+                    openStory(story.id);
+                });
+                
+                storiesList.appendChild(storyElement);
+            });
+        }
+
+        // Buka story
+        function openStory(storyId) {
+            const storyIndex = allStories.findIndex(s => s.id === storyId);
+            if (storyIndex !== -1) {
+                currentStoryIndex = storyIndex;
+                showStory(currentStoryIndex);
+                storyModal.classList.remove('hidden');
+                document.body.style.overflow = 'hidden';
+            }
+        }
+
+        // Tampilkan story
+        function showStory(index) {
+            if (index < 0 || index >= allStories.length) return;
+            
+            const story = allStories[index];
+            storyUserName.textContent = story.userName;
+            storyUserAvatar.src = story.userAvatar;
+            storyTime.textContent = story.time;
+            
+            // Clear content area
+            storyContentArea.innerHTML = '';
+            
+            // Tampilkan berdasarkan tipe story
+            if (story.type === 'text') {
+                // Story teks full layar
+                const textStoryDiv = document.createElement('div');
+                textStoryDiv.className = `w-full h-full ${story.background} story-text-container`;
+                textStoryDiv.innerHTML = `
+                    <div class="story-text-content animate-float">
+                        ${story.content.replace(/\n/g, '<br>')}
+                    </div>
+                `;
+                storyContentArea.appendChild(textStoryDiv);
+            } else if (story.type === 'image') {
+                // Story foto full layar
+                const imageStoryDiv = document.createElement('div');
+                imageStoryDiv.className = 'relative w-full h-full';
+                imageStoryDiv.innerHTML = `
+                    <img src="${story.image}" class="story-image-full" alt="Story Image">
+                    <div class="story-overlay"></div>
+                    ${story.textOverlay ? `
+                        <div class="absolute bottom-20 left-0 right-0 text-center">
+                            <div class="story-text-content animate-text-glow">
+                                ${story.textOverlay}
+                            </div>
+                        </div>
+                    ` : ''}
+                `;
+                storyContentArea.appendChild(imageStoryDiv);
+            }
+            
+            // Update progress bars
+            storyProgressBars.innerHTML = '';
+            allStories.forEach((s, i) => {
+                const progressBar = document.createElement('div');
+                progressBar.className = 'story-progress flex-1';
+                if (i === index) {
+                    progressBar.innerHTML = '<div class="story-progress-bar"></div>';
+                } else if (i < index) {
+                    progressBar.innerHTML = '<div class="story-progress-bar" style="width: 100%;"></div>';
+                }
+                storyProgressBars.appendChild(progressBar);
+            });
+            
+            // Tandai sebagai dilihat
+            if (!story.viewed && story.userId !== 0) {
+                story.viewed = true;
+                const originalStory = stories.find(s => s.id === story.id);
+                if (originalStory) originalStory.viewed = true;
+                renderStories();
+            }
+            
+            // Auto next story setelah 10 detik
+            clearTimeout(window.storyTimeout);
+            window.storyTimeout = setTimeout(() => {
+                nextStory.click();
+            }, 10000);
+        }
+
+        // Setup preview story teks
+        function setupTextStoryPreview() {
+            // Pilih background berdasarkan mood
+            document.querySelectorAll('[data-bg]').forEach(bg => {
+                bg.addEventListener('click', function() {
+                    selectedBackground = this.dataset.bg;
+                    updateTextStoryPreview();
+                    
+                    // Hapus border aktif dari semua
+                    document.querySelectorAll('[data-bg]').forEach(el => {
+                        el.classList.remove('border-primary');
+                        el.classList.add('border-transparent');
+                    });
+                    
+                    // Tambah border aktif
+                    this.classList.remove('border-transparent');
+                    this.classList.add('border-primary');
+                });
+            });
+            
+            // Update preview saat mengetik
+            storyTextInput.addEventListener('input', updateTextStoryPreview);
+            
+            // Emoji picker
+            emojiBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                emojiPicker.classList.toggle('active');
+            });
+            
+            // Pilih emoji
+            emojiPicker.querySelectorAll('span').forEach(emoji => {
+                emoji.addEventListener('click', function() {
+                    storyTextInput.value += this.textContent;
+                    updateTextStoryPreview();
+                    emojiPicker.classList.remove('active');
+                });
+            });
+            
+            // Tutup emoji picker saat klik di luar
+            document.addEventListener('click', (e) => {
+                if (!emojiPicker.contains(e.target) && e.target !== emojiBtn) {
+                    emojiPicker.classList.remove('active');
+                }
+            });
+            
+            // Initial preview
+            updateTextStoryPreview();
+        }
+        
+        function updateTextStoryPreview() {
+            const text = storyTextInput.value || "Preview akan muncul di sini";
+            textStoryPreview.innerHTML = `
+                <div class="w-full h-full ${selectedBackground} story-text-container">
+                    <div class="story-text-content">
+                        ${text.replace(/\n/g, '<br>')}
+                    </div>
+                </div>
+            `;
+        }
+
+        // Render pesan untuk chat tertentu
+        function renderMessages(contactId) {
+            messagesContainer.innerHTML = '';
+            
+            const chatMessages = messages.filter(msg => msg.contactId === contactId);
+            
+            chatMessages.forEach(message => {
+                const messageElement = document.createElement('div');
+                messageElement.className = `flex ${message.isOwn ? 'justify-end' : 'justify-start'} mb-4 animate-fade-in`;
+                
+                if (!message.isOwn) {
+                    messageElement.innerHTML = `
+                        <div class="flex items-end space-x-2 max-w-full">
+                            <img 
+                                src="${message.avatar}" 
+                                alt="${message.sender}" 
+                                class="w-8 h-8 rounded-full flex-shrink-0"
+                            >
+                            <div class="message-bubble bg-white border border-gray-200 rounded-2xl rounded-tl-none px-4 py-2">
+                                <p class="text-sm font-medium text-text mb-1">${message.sender}</p>
+                                <p class="text-text">${message.content}</p>
+                                <div class="flex justify-end items-center mt-1">
+                                    <span class="text-xs text-text-light">${message.timestamp}</span>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    const statusIcon = message.status === 'sent' ? 'fa-check' : 
+                                     message.status === 'delivered' ? 'fa-check-double' : 
+                                     'fa-check-double text-blue-500';
+                    
+                    messageElement.innerHTML = `
+                        <div class="flex items-end space-x-2 max-w-full">
+                            <div class="message-bubble bg-primary text-white rounded-2xl rounded-br-none px-4 py-2">
+                                <p>${message.content}</p>
+                                <div class="flex justify-end items-center mt-1">
+                                    <span class="text-xs opacity-80">${message.timestamp}</span>
+                                    <i class="fas ${statusIcon} text-xs ml-1"></i>
+                                </div>
+                            </div>
+                            <img 
+                                src="${message.avatar}" 
+                                alt="${message.sender}" 
+                                class="w-8 h-8 rounded-full flex-shrink-0"
+                            >
+                        </div>
+                    `;
+                }
+                
+                messagesContainer.appendChild(messageElement);
+            });
+            
+            // Scroll ke bawah
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            
+            // Tampilkan/sembunyikan indikator mengetik
+            const currentContact = contacts.find(c => c.id === contactId);
+            if (currentContact && currentContact.isTyping) {
+                typingIndicator.classList.remove('hidden');
+            } else {
+                typingIndicator.classList.add('hidden');
+            }
+        }
+
+        // Render notifikasi
+        function renderNotifications() {
+            const notificationsContainer = notificationsDropdown.querySelector('.max-h-64');
+            notificationsContainer.innerHTML = '';
+            
+            notifications.forEach(notification => {
+                const notificationElement = document.createElement('div');
+                notificationElement.className = `p-4 border-b border-gray-100 hover:bg-gray-50 cursor-pointer ${!notification.read ? 'bg-blue-50' : ''}`;
+                
+                const icon = notification.type === 'message' ? 'fa-comment-alt' :
+                            notification.type === 'story' ? 'fa-circle' :
+                            notification.type === 'group' ? 'fa-users' :
+                            notification.type === 'call' ? 'fa-phone' : 'fa-file';
+                
+                notificationElement.innerHTML = `
+                    <div class="flex items-start space-x-3">
+                        <div class="w-10 h-10 rounded-full bg-primary bg-opacity-10 flex items-center justify-center flex-shrink-0">
+                            <i class="fas ${icon} text-primary"></i>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <h5 class="font-medium text-text">${notification.title}</h5>
+                            <p class="text-sm text-text-light mt-1">${notification.message}</p>
+                            <span class="text-xs text-text-light mt-1 block">${notification.time}</span>
+                        </div>
+                        ${!notification.read ? 
+                            '<div class="w-2 h-2 bg-primary rounded-full flex-shrink-0 mt-2"></div>' : 
+                            ''
+                        }
+                    </div>
+                `;
+                
+                notificationsContainer.appendChild(notificationElement);
+            });
+        }
+
+        // Update info chat saat ini di header
+        function updateCurrentChatInfo() {
+            const currentContact = contacts.find(c => c.id === currentChatId);
+            if (currentContact) {
+                currentChatName.textContent = currentContact.name;
+                
+                if (currentContact.isGroup) {
+                    currentChatStatus.textContent = `${currentContact.members} anggota • ${currentContact.status === 'online' ? '5 online' : 'Terakhir aktif hari ini'}`;
+                } else {
+                    const statusText = currentContact.status === 'online' ? 'Online' :
+                                     currentContact.status === 'away' ? 'Away' : 'Offline';
+                    currentChatStatus.textContent = `${statusText} • Terakhir dilihat 2 menit lalu`;
+                }
+            }
+        }
+
+        // Kirim pesan baru
+        function sendMessage() {
+            const content = messageInput.value.trim();
+            if (!content) return;
+            
+            const newMessage = {
+                id: messages.length + 1,
+                contactId: currentChatId,
+                sender: "Adnan",
+                avatar: currentUser.avatar,
+                content: content,
+                timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                isOwn: true,
+                status: 'sent'
+            };
+            
+            messages.push(newMessage);
+            renderMessages(currentChatId);
+            messageInput.value = '';
+            
+            // Simulasikan balasan dari anggota grup setelah 1-3 detik
+            setTimeout(() => {
+                const currentContact = contacts.find(c => c.id === currentChatId);
+                if (currentContact && currentContact.isGroup) {
+                    const groupMembers = [
+                        { name: "Sari Dewi", avatar: "https://randomuser.me/api/portraits/women/44.jpg" },
+                        { name: "Dedi Kurniawan", avatar: "https://randomuser.me/api/portraits/men/22.jpg" },
+                        { name: "Maya Fitri", avatar: "https://randomuser.me/api/portraits/women/33.jpg" }
+                    ];
+                    
+                    const randomMember = groupMembers[Math.floor(Math.random() * groupMembers.length)];
+                    const replies = [
+                        "Oke siap!",
+                        "Nanti saya datang",
+                        "Makasih infonya",
+                        "Jangan lupa bawa tugas",
+                        "Sampai ketemu besok",
+                    ];
+                    
+                    const randomReply = replies[Math.floor(Math.random() * replies.length)];
+                    
+                    const replyMessage = {
+                        id: messages.length + 1,
+                        contactId: currentChatId,
+                        sender: randomMember.name,
+                        avatar: randomMember.avatar,
+                        content: randomReply,
+                        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                        isOwn: false,
+                        status: 'read'
+                    };
+                    messages.push(replyMessage);
+                    renderMessages(currentChatId);
+                }
+            }, 1000 + Math.random() * 2000);
+            
+            // Update pesan terakhir di kontak
+            const contactIndex = contacts.findIndex(c => c.id === currentChatId);
+            if (contactIndex !== -1) {
+                contacts[contactIndex].lastMessage = `Adnan: ${content.substring(0, 30)}${content.length > 30 ? '...' : ''}`;
+                contacts[contactIndex].timestamp = "Baru saja";
+                contacts[contactIndex].unreadCount = 0;
+                renderContacts();
+            }
+        }
+
+        // Setup event listener
+        function setupEventListeners() {
+            // Kirim pesan saat tombol diklik
+            sendMessageBtn.addEventListener('click', sendMessage);
+            
+            // Kirim pesan saat tombol Enter (tapi Shift+Enter untuk baris baru)
+            messageInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    sendMessage();
+                }
+            });
+            
+            // Cari kontak
+            searchInput.addEventListener('input', (e) => {
+                renderContacts(e.target.value);
+            });
+            
+            // Toggle dropdown notifikasi
+            notificationsBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                notificationsDropdown.classList.toggle('hidden');
+                profileDropdown.classList.add('hidden');
+            });
+            
+            // Toggle dropdown profil
+            profileBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                profileDropdown.classList.toggle('hidden');
+                notificationsDropdown.classList.add('hidden');
+            });
+            
+            // Tutup dropdown saat klik di luar
+            document.addEventListener('click', () => {
+                notificationsDropdown.classList.add('hidden');
+                profileDropdown.classList.add('hidden');
+            });
+            
+            // Toggle menu mobile
+            menuToggle.addEventListener('click', () => {
+                contactsSidebar.classList.add('active');
+                overlay.classList.add('active');
+            });
+            
+            // Klik overlay untuk tutup sidebar
+            overlay.addEventListener('click', () => {
+                contactsSidebar.classList.remove('active');
+                overlay.classList.remove('active');
+            });
+            
+            // Kembali ke kontak di mobile
+            backToContacts.addEventListener('click', () => {
+                contactsSidebar.classList.add('active');
+                overlay.classList.add('active');
+            });
+            
+            // Toggle sidebar info chat
+            chatInfoBtn.addEventListener('click', () => {
+                chatInfoSidebar.classList.toggle('hidden');
+            });
+            
+            closeChatInfo.addEventListener('click', () => {
+                chatInfoSidebar.classList.add('hidden');
+            });
+            
+            // Modal chat baru
+            newChatBtn.addEventListener('click', () => {
+                newChatModal.classList.remove('hidden');
+                renderNewChatContacts();
+            });
+            
+            cancelNewChat.addEventListener('click', () => {
+                newChatModal.classList.add('hidden');
+            });
+            
+            startNewChat.addEventListener('click', () => {
+                alert('Memulai chat baru di iTalks...');
+                newChatModal.classList.add('hidden');
+            });
+            
+            // Cari di modal chat baru
+            newChatSearch.addEventListener('input', (e) => {
+                renderNewChatContacts(e.target.value);
+            });
+            
+            // Toggle pencarian mobile
+            mobileSearchBtn.addEventListener('click', () => {
+                mobileSearchBar.classList.toggle('hidden');
+            });
+            
+            // Tutup modal saat klik di luar
+            newChatModal.addEventListener('click', (e) => {
+                if (e.target === newChatModal) {
+                    newChatModal.classList.add('hidden');
+                }
+            });
+            
+            // Fitur Story
+            document.getElementById('myStory').addEventListener('click', () => {
+                createStoryModal.classList.remove('hidden');
+            });
+            
+            addStoryBtn.addEventListener('click', () => {
+                createStoryModal.classList.remove('hidden');
+            });
+            
+            closeCreateStoryModal.addEventListener('click', () => {
+                createStoryModal.classList.add('hidden');
+            });
+            
+            createStoryModal.addEventListener('click', (e) => {
+                if (e.target === createStoryModal) {
+                    createStoryModal.classList.add('hidden');
+                }
+            });
+            
+            // Story teks
+            textStoryBtn.addEventListener('click', () => {
+                createStoryModal.classList.add('hidden');
+                textStoryModal.classList.remove('hidden');
+            });
+            
+            cancelTextStory.addEventListener('click', () => {
+                textStoryModal.classList.add('hidden');
+                resetTextStoryForm();
+            });
+            
+            postTextStory.addEventListener('click', () => {
+                const text = storyTextInput.value.trim();
+                if (!text) {
+                    alert('Mohon tulis pesan untuk story');
+                    return;
+                }
+                
+                // Auto-deteksi mood dari teks untuk background
+                const detectedBackground = detectMoodFromText(text);
+                
+                const newStory = {
+                    id: myStories.length + 1,
+                    userId: 0,
+                    userName: "Adnan Ghulwani",
+                    userAvatar: currentUser.avatar,
+                    content: text,
+                    background: detectedBackground || selectedBackground,
+                    time: "Baru saja",
+                    viewed: false,
+                    type: "text"
+                };
+                
+                myStories.unshift(newStory);
+                allStories = [...myStories, ...stories];
+                renderStories();
+                
+                // Tambahkan notifikasi
+                notifications.unshift({
+                    id: notifications.length + 1,
+                    title: "Story Berhasil",
+                    message: "Story teks Anda telah diposting di iTalks",
+                    time: "Baru saja",
+                    read: false,
+                    type: "story"
+                });
+                renderNotifications();
+                
+                textStoryModal.classList.add('hidden');
+                resetTextStoryForm();
+                
+                alert('Story teks berhasil diposting di iTalks!');
+            });
+            
+            // Story foto
+            photoStoryBtn.addEventListener('click', () => {
+                createStoryModal.classList.add('hidden');
+                photoStoryModal.classList.remove('hidden');
+            });
+            
+            cancelPhotoStory.addEventListener('click', () => {
+                photoStoryModal.classList.add('hidden');
+                resetPhotoStoryForm();
+            });
+            
+            photoStoryModal.addEventListener('click', (e) => {
+                if (e.target === photoStoryModal) {
+                    photoStoryModal.classList.add('hidden');
+                    resetPhotoStoryForm();
+                }
+            });
+            
+            // Upload foto
+            photoUploadArea.addEventListener('click', () => {
+                photoFileInput.click();
+            });
+            
+            photoFileInput.addEventListener('change', handlePhotoUpload);
+            
+            // Input teks untuk foto
+            photoTextInput.addEventListener('input', (e) => {
+                photoTextOverlay = e.target.value;
+            });
+            
+            // Drag and drop untuk upload
+            photoUploadArea.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                photoUploadArea.classList.add('border-primary');
+                photoUploadArea.classList.remove('border-gray-300');
+            });
+            
+            photoUploadArea.addEventListener('dragleave', () => {
+                photoUploadArea.classList.remove('border-primary');
+                photoUploadArea.classList.add('border-gray-300');
+            });
+            
+            photoUploadArea.addEventListener('drop', (e) => {
+                e.preventDefault();
+                photoUploadArea.classList.remove('border-primary');
+                photoUploadArea.classList.add('border-gray-300');
+                
+                if (e.dataTransfer.files.length > 0) {
+                    photoFileInput.files = e.dataTransfer.files;
+                    handlePhotoUpload();
+                }
+            });
+            
+            removePhotoBtn.addEventListener('click', () => {
+                photoFileInput.value = '';
+                photoPreviewContainer.classList.add('hidden');
+                postPhotoStory.classList.add('hidden');
+                photoUploadArea.classList.remove('hidden');
+                currentPhotoData = null;
+                photoTextInput.value = '';
+                photoTextOverlay = '';
+            });
+            
+            // Kamera
+            openCameraBtn.addEventListener('click', openCamera);
+            closeCameraBtn.addEventListener('click', closeCamera);
+            captureBtn.addEventListener('click', capturePhoto);
+            postPhotoStory.addEventListener('click', postPhotoStoryHandler);
+            
+            // Modal story viewer
+            closeStory.addEventListener('click', () => {
+                storyModal.classList.add('hidden');
+                document.body.style.overflow = 'auto';
+                clearTimeout(window.storyTimeout);
+            });
+            
+            prevStory.addEventListener('click', () => {
+                if (currentStoryIndex > 0) {
+                    currentStoryIndex--;
+                    showStory(currentStoryIndex);
+                }
+            });
+            
+            nextStory.addEventListener('click', () => {
+                if (currentStoryIndex < allStories.length - 1) {
+                    currentStoryIndex++;
+                    showStory(currentStoryIndex);
+                } else {
+                    storyModal.classList.add('hidden');
+                    document.body.style.overflow = 'auto';
+                    clearTimeout(window.storyTimeout);
+                }
+            });
+            
+            // Like story
+            storyLikeBtn.addEventListener('click', () => {
+                storyLikeBtn.innerHTML = '<i class="fas fa-heart text-2xl text-red-500 animate-pulse"></i>';
+                setTimeout(() => {
+                    storyLikeBtn.innerHTML = '<i class="far fa-heart text-2xl"></i>';
+                }, 1000);
+            });
+            
+            // Kirim komentar story
+            storySendBtn.addEventListener('click', () => {
+                const comment = storyCommentInput.value.trim();
+                if (comment) {
+                    alert(`Komentar dikirim: "${comment}"`);
+                    storyCommentInput.value = '';
+                }
+            });
+            
+            storyCommentInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    storySendBtn.click();
+                }
+            });
+            
+            // Simulasikan indikator mengetik di grup utama
+            setInterval(() => {
+                const mainGroup = contacts.find(c => c.isMainGroup);
+                if (mainGroup && Math.random() > 0.7) {
+                    mainGroup.isTyping = true;
+                    renderContacts();
+                    
+                    setTimeout(() => {
+                        mainGroup.isTyping = false;
+                        renderContacts();
+                        
+                        // Tambahkan pesan otomatis dari anggota grup
+                        const groupMembers = [
+                            { name: "Sari Dewi", avatar: "https://randomuser.me/api/portraits/women/44.jpg" },
+                            { name: "Dedi Kurniawan", avatar: "https://randomuser.me/api/portraits/men/22.jpg" }
+                        ];
+                        
+                        const randomMember = groupMembers[Math.floor(Math.random() * groupMembers.length)];
+                        const autoMessages = [
+                            "Ada yang punya catatan materi kemarin?",
+                            "Besok dosen hadir tidak ya?",
+                            "Link zoom sudah dibagikan di classroom",
+                            "Jangan lupa mengumpulkan tugas sebelum jam 12"
+                        ];
+                        
+                        const randomMessage = autoMessages[Math.floor(Math.random() * autoMessages.length)];
+                        
+                        const newAutoMessage = {
+                            id: messages.length + 1,
+                            contactId: mainGroup.id,
+                            sender: randomMember.name,
+                            avatar: randomMember.avatar,
+                            content: randomMessage,
+                            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                            isOwn: false,
+                            status: 'read'
+                        };
+                        
+                        messages.push(newAutoMessage);
+                        if (currentChatId === mainGroup.id) {
+                            renderMessages(currentChatId);
+                        }
+                        
+                        // Update last message
+                        mainGroup.lastMessage = `${randomMember.name.split(' ')[0]}: ${randomMessage.substring(0, 30)}${randomMessage.length > 30 ? '...' : ''}`;
+                        mainGroup.timestamp = "Baru saja";
+                        mainGroup.unreadCount++;
+                        renderContacts();
+                    }, 3000);
+                }
+            }, 15000);
+            
+            // Update status pesan (simulasi pengiriman dan dibaca)
+            setInterval(() => {
+                const ownMessages = messages.filter(msg => msg.isOwn && msg.status === 'sent');
+                if (ownMessages.length > 0) {
+                    const randomMessage = ownMessages[Math.floor(Math.random() * ownMessages.length)];
+                    randomMessage.status = 'delivered';
+                    renderMessages(currentChatId);
+                    
+                    setTimeout(() => {
+                        randomMessage.status = 'read';
+                        renderMessages(currentChatId);
+                    }, 2000);
+                }
+            }, 5000);
+            
+            // Simulasikan story baru dari teman
+            setInterval(() => {
+                if (Math.random() > 0.8 && stories.length > 0) {
+                    const randomFriend = contacts.filter(c => !c.isGroup && c.id !== 0)[
+                        Math.floor(Math.random() * (contacts.length - 3))
+                    ];
+                    
+                    if (randomFriend) {
+                        const textStoryTemplates = [
+                            "Hari yang produktif! 💪\n\nSemoga energi positif selalu menyertai kita!",
+                            "Mood belajar hari ini: ✨📚\n\nSiap menghadapi tantangan baru!",
+                            "Cantiknya langit sore ini! 🌅\n\nMomen yang berharga untuk disyukuri",
+                            "Baru coba resep baru, enak banget! 🍛\n\nSiapa mau icip-icip?",
+                            "Weekend seru bersama teman! 🎉\n\nQuality time yang sangat berarti"
+                        ];
+                        
+                        const imageStoryUrls = [
+                            'https://images.unsplash.com/photo-1529335764857-3f1164d1cb24?ixlib=rb-1.2.1&auto=format&fit=crop&w=1200&q=80',
+                            'https://images.unsplash.com/photo-1523580494863-6f3031224c94?ixlib=rb-1.2.1&auto=format&fit=crop&w=1200&q=80',
+                            'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?ixlib=rb-1.2.1&auto=format&fit=crop&w=1200&q=80'
+                        ];
+                        
+                        const imageTextOverlays = [
+                            "Momen indah yang tak terlupakan ✨",
+                            "Keindahan alam yang menakjubkan 🌿",
+                            "Bersyukur atas setiap detik kehidupan 🙏"
+                        ];
+                        
+                        const isTextStory = Math.random() > 0.5;
+                        const newStory = {
+                            id: stories.length + 1,
+                            userId: randomFriend.id,
+                            userName: randomFriend.name,
+                            userAvatar: randomFriend.avatar,
+                            time: "Baru saja",
+                            viewed: false,
+                        };
+                        
+                        if (isTextStory) {
+                            newStory.type = "text";
+                            newStory.content = textStoryTemplates[Math.floor(Math.random() * textStoryTemplates.length)];
+                            newStory.background = detectMoodFromText(newStory.content) || 'story-bg-motivasi';
+                        } else {
+                            newStory.type = "image";
+                            newStory.image = imageStoryUrls[Math.floor(Math.random() * imageStoryUrls.length)];
+                            newStory.textOverlay = imageTextOverlays[Math.floor(Math.random() * imageTextOverlays.length)];
+                        }
+                        
+                        stories.unshift(newStory);
+                        allStories = [...myStories, ...stories];
+                        renderStories();
+                        
+                        // Tambahkan notifikasi
+                        notifications.unshift({
+                            id: notifications.length + 1,
+                            title: "Story Baru di iTalks",
+                            message: `${randomFriend.name} mengupload story baru`,
+                            time: "Baru saja",
+                            read: false,
+                            type: "story"
+                        });
+                        renderNotifications();
+                    }
+                }
+            }, 30000);
+        }
+
+        // Deteksi mood dari teks untuk memilih background
+        function detectMoodFromText(text) {
+            const lowerText = text.toLowerCase();
+            
+            if (lowerText.includes('semangat') || lowerText.includes('motivasi') || lowerText.includes('usaha') || lowerText.includes('impian')) {
+                return 'story-bg-motivasi';
+            } else if (lowerText.includes('bahagia') || lowerText.includes('senang') || lowerText.includes('senyum') || lowerText.includes('💖')) {
+                return 'story-bg-bahagia';
+            } else if (lowerText.includes('santai') || lowerText.includes('tenang') || lowerText.includes('damai') || lowerText.includes('🌿')) {
+                return 'story-bg-santai';
+            } else if (lowerText.includes('segar') || lowerText.includes('baru') || lowerText.includes('fresh') || lowerText.includes('🌱')) {
+                return 'story-bg-segar';
+            } else if (lowerText.includes('energi') || lowerText.includes('produktif') || lowerText.includes('🔥') || lowerText.includes('💪')) {
+                return 'story-bg-energik';
+            } else if (lowerText.includes('misteri') || lowerText.includes('rahasia') || lowerText.includes('✨') || lowerText.includes('🌟')) {
+                return 'story-bg-misterius';
+            }
+            
+            return null;
+        }
+
+        // Handle upload foto
+        function handlePhotoUpload() {
+            const file = photoFileInput.files[0];
+            if (file && file.type.startsWith('image/')) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    currentPhotoData = e.target.result;
+                    photoPreview.src = currentPhotoData;
+                    photoUploadArea.classList.add('hidden');
+                    photoPreviewContainer.classList.remove('hidden');
+                    postPhotoStory.classList.remove('hidden');
+                };
+                reader.readAsDataURL(file);
+            } else {
+                alert('Mohon pilih file gambar yang valid');
+            }
+        }
+
+        // Buka kamera
+        async function openCamera() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { facingMode: 'user' },
+                    audio: false 
+                });
+                cameraPreview.srcObject = stream;
+                photoUploadArea.classList.add('hidden');
+                cameraView.classList.remove('hidden');
+            } catch (err) {
+                console.error('Error accessing camera:', err);
+                alert('Tidak dapat mengakses kamera. Pastikan izin kamera diberikan.');
+            }
+        }
+
+        // Tutup kamera
+        function closeCamera() {
+            cameraView.classList.add('hidden');
+            photoUploadArea.classList.remove('hidden');
+            
+            // Hentikan stream kamera
+            if (cameraPreview.srcObject) {
+                cameraPreview.srcObject.getTracks().forEach(track => track.stop());
+            }
+        }
+
+        // Ambil foto dari kamera
+        function capturePhoto() {
+            const canvas = document.createElement('canvas');
+            canvas.width = cameraPreview.videoWidth;
+            canvas.height = cameraPreview.videoHeight;
+            canvas.getContext('2d').drawImage(cameraPreview, 0, 0);
+            
+            currentPhotoData = canvas.toDataURL('image/jpeg');
+            photoPreview.src = currentPhotoData;
+            photoPreviewContainer.classList.remove('hidden');
+            cameraView.classList.add('hidden');
+            postPhotoStory.classList.remove('hidden');
+            
+            // Hentikan stream kamera
+            if (cameraPreview.srcObject) {
+                cameraPreview.srcObject.getTracks().forEach(track => track.stop());
+            }
+        }
+
+        // Post photo story
+        function postPhotoStoryHandler() {
+            if (!currentPhotoData) {
+                alert('Tidak ada foto yang dipilih');
+                return;
+            }
+            
+            const newStory = {
+                id: myStories.length + 1,
+                userId: 0,
+                userName: "Adnan Ghulwani",
+                userAvatar: currentUser.avatar,
+                image: currentPhotoData,
+                textOverlay: photoTextOverlay,
+                time: "Baru saja",
+                viewed: false,
+                type: "image"
+            };
+            
+            myStories.unshift(newStory);
+            allStories = [...myStories, ...stories];
+            renderStories();
+            
+            // Tambahkan notifikasi
+            notifications.unshift({
+                id: notifications.length + 1,
+                title: "Story Berhasil",
+                message: "Story foto Anda telah diupload di iTalks",
+                time: "Baru saja",
+                read: false,
+                type: "story"
+            });
+            renderNotifications();
+            
+            photoStoryModal.classList.add('hidden');
+            resetPhotoStoryForm();
+            
+            alert('Story foto berhasil diupload di iTalks!');
+        }
+
+        // Reset form story teks
+        function resetTextStoryForm() {
+            storyTextInput.value = '';
+            selectedBackground = 'story-bg-motivasi';
+            updateTextStoryPreview();
+            
+            // Reset border aktif
+            document.querySelectorAll('[data-bg]').forEach(el => {
+                el.classList.remove('border-primary');
+                el.classList.add('border-transparent');
+            });
+            document.querySelector('[data-bg="story-bg-motivasi"]').classList.add('border-primary');
+        }
+
+        // Reset form story foto
+        function resetPhotoStoryForm() {
+            photoFileInput.value = '';
+            currentPhotoData = null;
+            photoTextOverlay = '';
+            photoPreviewContainer.classList.add('hidden');
+            postPhotoStory.classList.add('hidden');
+            cameraView.classList.add('hidden');
+            photoUploadArea.classList.remove('hidden');
+            photoTextInput.value = '';
+            
+            // Hentikan stream kamera
+            if (cameraPreview.srcObject) {
+                cameraPreview.srcObject.getTracks().forEach(track => track.stop());
+            }
+        }
+
+        // Render kontak untuk modal chat baru
+        function renderNewChatContacts(filter = '') {
+            const container = newChatModal.querySelector('.max-h-64');
+            container.innerHTML = '';
+            
+            const filteredContacts = contacts.filter(contact => 
+                contact.name.toLowerCase().includes(filter.toLowerCase())
+            );
+            
+            filteredContacts.forEach(contact => {
+                const contactElement = document.createElement('div');
+                contactElement.className = 'flex items-center p-3 hover:bg-gray-50 cursor-pointer rounded-lg';
+                
+                let avatarHTML = '';
+                if (contact.isGroup) {
+                    avatarHTML = `
+                        <div class="w-10 h-10 rounded-full bg-gradient-to-r from-primary to-accent flex items-center justify-center mr-3">
+                            <i class="fas fa-users text-white"></i>
+                        </div>
+                    `;
+                } else {
+                    avatarHTML = `
+                        <div class="relative mr-3">
+                            <img src="${contact.avatar}" alt="${contact.name}" class="w-10 h-10 rounded-full">
+                            <div class="online-status ${contact.status === 'online' ? 'online' : contact.status === 'away' ? 'away' : 'offline'}"></div>
+                        </div>
+                    `;
+                }
+                
+                contactElement.innerHTML = `
+                    ${avatarHTML}
+                    <div class="flex-1">
+                        <h4 class="font-medium text-text">${contact.name}</h4>
+                        <p class="text-sm text-text-light">${contact.isGroup ? `${contact.members} anggota` : contact.status === 'online' ? 'Online' : 'Terakhir dilihat baru saja'}</p>
+                    </div>
+                    <div class="ml-2">
+                        <input type="checkbox" class="rounded text-primary focus:ring-primary">
+                    </div>
+                `;
+                
+                container.appendChild(contactElement);
+            });
+        }
+
+        // Inisialisasi aplikasi saat DOM dimuat
+        document.addEventListener('DOMContentLoaded', initApp);
+    </script>
+</body>
+</html>
